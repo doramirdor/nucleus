@@ -3,6 +3,8 @@
 # produced by the router.
 #
 # Regenerate with:  vhs demo/multi-profile.tape
+#
+# Requires two `supabase:*` profiles already added.
 
 Output demo/multi-profile.gif
 
@@ -13,8 +15,15 @@ Set Height 820
 Set Theme "Catppuccin Mocha"
 Set TypingSpeed 40ms
 
-Type "# two real Supabase profiles, one workspace"
-Sleep 1.2s
+# Setup: scratch dir, hidden from the GIF so we start with a clean prompt.
+Hide
+Type `SCRATCH=$(mktemp -d -t nucleus-multi.XXX) && cd "$SCRATCH" && clear`
+Enter
+Sleep 500ms
+Show
+
+Type "# Two Supabase profiles — both live in the same Claude session"
+Sleep 1.5s
 Enter
 Sleep 400ms
 
@@ -22,8 +31,8 @@ Type "nucleusmcp list"
 Enter
 Sleep 3s
 
-# Write a .mcp-profiles.toml that exposes both with friendly aliases
-Type "cat > .mcp-profiles.toml <<EOF"
+# Write a .mcp-profiles.toml that exposes both with friendly aliases + notes.
+Type "cat > .mcp-profiles.toml <<'EOF'"
 Enter
 Type "[[supabase]]"
 Enter
@@ -51,12 +60,17 @@ Type "cat .mcp-profiles.toml"
 Enter
 Sleep 3s
 
-# The resolver's view, printed as log lines on startup
-Type "# starting the gateway prints which profile each alias binds to:"
+# The resolver's view, printed as log lines on gateway startup.
+Type "# starting the gateway logs which profile each alias binds to:"
 Enter
-Sleep 600ms
-Type "echo '' | nucleusmcp serve 2>&1 | grep 'resolved profile' | head"
+Sleep 500ms
+Type "echo '' | nucleusmcp serve 2>&1 >/dev/null | grep -E 'workspace|resolved profile|alias ready|gateway listening' | head -8"
 Enter
-Sleep 4s
+Sleep 5s
 
 Sleep 1.5s
+
+Hide
+Type `cd ~ && rm -rf "$SCRATCH"`
+Enter
+Show
