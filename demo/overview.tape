@@ -1,58 +1,51 @@
 # overview.tape — hero GIF for README
 #
-# Regenerate with:
-#   vhs demo/overview.tape
+# Regenerate with:  vhs demo/overview.tape
 #
 # Requires:
-#   - vhs installed      (https://github.com/charmbracelet/vhs)
-#   - nucleusmcp on PATH (`make install`)
-#   - at least one profile registered (e.g. via `nucleusmcp add supabase`)
+#   - vhs installed        (https://github.com/charmbracelet/vhs)
+#   - nucleusmcp on PATH   (`make install`)
+#   - at least one profile registered
 
 Output demo/overview.gif
 
 Set Shell "bash"
 Set FontSize 14
 Set Width 1200
-Set Height 720
+Set Height 900
 Set Theme "Catppuccin Mocha"
-Set TypingSpeed 40ms
+Set TypingSpeed 45ms
 Set PlaybackSpeed 1.0
 
-# Setup: drop into a clean scratch dir so this demo doesn't pick up a
-# .mcp-profiles.toml from the repo we're recording from. Hidden from the GIF.
+# Setup: scratch dir + clean prompt. Hidden so the GIF starts clean.
 Hide
-Type `SCRATCH=$(mktemp -d -t nucleus-overview.XXX) && cd "$SCRATCH" && clear`
+Type `PS1='$ ' && cd $(mktemp -d -t nucleus-overview.XXX) && clear`
 Enter
-Sleep 500ms
+Sleep 400ms
 Show
 
 # 1. Built-in + custom connectors
 Type "nucleusmcp connectors"
-Sleep 400ms
+Sleep 300ms
 Enter
 Sleep 3s
 
-# 2. Active profiles (connections)
+# 2. Active profiles
 Type "nucleusmcp list"
-Sleep 400ms
+Sleep 300ms
 Enter
 Sleep 3s
 
-# 3. Config for one profile (no live probe — keeps GIF deterministic)
+# 3. Per-profile config (no live probe so the GIF is deterministic)
 Type "nucleusmcp info --no-probe"
-Sleep 400ms
+Sleep 300ms
 Enter
-Sleep 5s
+Sleep 6s
 
-# 4. Register with Claude Code (print the snippet without writing)
+# 4. Register with Claude (print-only)
 Type "nucleusmcp install --print"
-Sleep 400ms
+Sleep 300ms
 Enter
 Sleep 5s
 
-Sleep 1s
-
-Hide
-Type `cd ~ && rm -rf "$SCRATCH"`
-Enter
-Show
+Sleep 800ms

@@ -108,9 +108,15 @@ When you start the gateway in a directory, this is how it picks which profile(s)
 
 Whatever rule fires is logged, so you can always see why Claude sees what it sees.
 
-## `.mcp-profiles.toml`
+## `.mcp-profiles.toml` (optional)
 
-Drop this at the root of any repo to pin bindings:
+You don't need this file. With nothing configured, the gateway exposes every profile automatically — each under its own tool namespace.
+
+Drop one at the root of a repo when you want to:
+
+- **Pin** specific profiles to this workspace and hide the others
+- **Alias** a profile to a shorter name (`supabase_prod_*` instead of `supabase_acme-prod_*`)
+- **Attach a note** that's spliced into every proxied tool's description, so the MCP client reads warnings (`"PRODUCTION — read-only"`) at call time
 
 ```toml
 # Single profile per connector
@@ -132,8 +138,6 @@ note    = "staging"
 [github]
 profile = "work"
 ```
-
-`note` is spliced into every proxied tool's description so Claude reads the warning at call time.
 
 ## Custom connectors
 
