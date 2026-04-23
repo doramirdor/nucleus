@@ -6,11 +6,28 @@
 
 ---
 
-## Why
+## The pain
 
-MCP clients today assume one authenticated session per connector. If you have two Supabase projects in two accounts, Claude can only see one at a time. Want to switch? Disconnect, reconnect, re-auth — losing your chat context along the way.
+You're debugging a staging issue in Claude. Halfway through, the user asks *"does this happen in prod too?"* — and now you're stuck.
 
-NucleusMCP sits between your MCP client and the real services. It holds **profiles** (isolated authenticated sessions) for each connector and exposes them all to the client at once, with namespaced tool names so there's no ambiguity:
+**Today's MCP clients allow exactly one authenticated session per connector.** Claude Code, Cursor, Claude Desktop — they all treat "Supabase" as a single slot. One account. One project at a time. Want to peek at prod? Here's the dance:
+
+1. Stop the current chat (you can't multi-task)
+2. Open your MCP settings
+3. Disconnect Supabase
+4. Reconnect Supabase, authorize the other account in the browser
+5. Restart the Claude session
+6. Re-paste whatever context you had so Claude remembers what you were doing
+7. Ask the prod question
+8. ...and reverse all of that if you want to get back to staging
+
+Every switch is 2–5 minutes of yak-shaving, a lost conversation, and an interrupted train of thought. If you have *three* Supabase projects, or both a work and a personal GitHub, or prod + staging + dev — the tax compounds.
+
+The shape of the problem isn't Claude's fault; it's how the MCP protocol surfaces "one server, one connection" to the client. But it means the modern way real engineers work — one laptop, many accounts, many projects — collides head-on with the tool every single time you switch.
+
+## What NucleusMCP does
+
+It sits between your MCP client and the real services, holding **profiles** (isolated authenticated sessions) and exposing them all to the client at the same time. Claude sees one connector ("nucleusmcp") but every profile shows up as its own namespace:
 
 ```
 supabase_prod_execute_sql        → prod account, acme-web project
@@ -19,7 +36,7 @@ github_work_create_issue         → work PAT
 github_personal_create_issue     → personal PAT
 ```
 
-Tool descriptions carry the profile context automatically, so Claude knows *which* account each tool targets without being told.
+Tool descriptions carry the profile context (`[supabase/prod project_id=…]`) so Claude knows which account each tool targets without you telling it. No disconnect. No reconnect. No lost chat context. The prod vs staging question is a single sentence away — *"compare the users table between prod and staging"* — and Claude has both connections live in the same conversation.
 
 ## Install
 
