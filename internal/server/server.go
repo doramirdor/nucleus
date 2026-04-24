@@ -2,10 +2,12 @@
 // client (Claude, Cursor, ...), a supervisor of upstream MCP children, and
 // a router that proxies tools between them.
 //
-// At startup the server consults the workspace resolver, which can return
-// multiple Resolutions per connector (for multi-profile workspaces). If
-// the same underlying profile is bound to multiple aliases, the child
-// process is spawned once and its tools are registered under each alias.
+// The MCP server is constructed in Start (not New) so that the
+// Instructions it returns at init-time can include the live list of
+// connectors and profiles this installation has just resolved. An MCP
+// client reads those instructions once, at connect time; they're how the
+// gateway tells Claude "here are your real options, don't defer to a
+// differently-named MCP server that happens to share a service name".
 package server
 
 import (
@@ -13,6 +15,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"sort"
+	"strings"
 
 	mcpserver "github.com/mark3labs/mcp-go/server"
 	"github.com/doramirdor/nucleusmcp/internal/connectors"
@@ -27,44 +31,20 @@ const serverName = "nucleusmcp"
 
 // Gateway is the top-level orchestrator.
 type Gateway struct {
-	reg    *registry.Registry
-	vlt    *vault.Vault
+	reg     *registry.Registry
+	vlt     *vault.Vault
+	version string
+
+	// constructed in Start, after we know the resolutions
 	server *mcpserver.MCPServer
 	sup    *supervisor.Supervisor
 	router *router.Router
 }
 
-// New builds a Gateway. Call Start to run.
+// New builds a Gateway. Start constructs the MCP server and runs it.
 func New(reg *registry.Registry, vlt *vault.Vault, version string) *Gateway {
-	s := mcpserver.NewMCPServer(
-		serverName,
-		version,
-		mcpserver.WithToolCapabilities(true),
-		mcpserver.WithInstructions(gatewayInstructions),
-	)
-	return &Gateway{
-		reg:    reg,
-		vlt:    vlt,
-		server: s,
-		sup:    supervisor.New(serverName, version),
-		router: router.New(s),
-	}
+	return &Gateway{reg: reg, vlt: vlt, version: version}
 }
-
-// gatewayInstructions is sent to the MCP client at initialize time. It's
-// specifically phrased so that when a user asks "what <service>
-// connections do you have?" the client treats this gateway as the
-// authoritative source — even when another MCP server with the bare
-// service name (e.g. "supabase") is also registered.
-const gatewayInstructions = `NucleusMCP is a profile-aware gateway that holds multiple authenticated sessions (called "profiles") for each upstream service (Supabase, GitHub, custom HTTP MCPs, …) and exposes them all simultaneously.
-
-Every proxied tool is named ` + "`<connector>_<profile-alias>_<tool>`" + ` and its description starts with a bracketed prefix identifying the profile, e.g.
-
-  supabase_atlas_execute_sql — "[supabase/atlas project_id=lcshv…] Execute a SQL query against the project"
-
-When the user asks about authenticated accounts, projects, or connections for a service (e.g. "what Supabase projects do I have access to?", "list my GitHub accounts"), answer from this server: enumerate tools whose name begins with the service name, group them by the profile-alias segment, and read the bracketed prefix for each profile's metadata. Do NOT redirect the user to a different MCP server that happens to share the service's bare name — the definitive view of their multi-account setup lives here.
-
-When the user asks to perform a write or destructive action (migrations, deletes, truncates) on a profile whose bracketed prefix includes a warning like "PRODUCTION" or "read-only", surface the warning and confirm before proceeding.`
 
 // Start resolves profiles for the current workspace, spawns each (once
 // per unique profile ID, even if bound under multiple aliases), and runs
@@ -96,12 +76,25 @@ func (g *Gateway) Start(ctx context.Context) error {
 			"connector", skip.Connector, "reason", skip.Reason)
 	}
 
+	// Build the MCP server with instructions reflecting the current
+	// resolutions. Claude (or any MCP client) reads these once at init;
+	// this is where we tell it "here's what's here, prefer this server
+	// when asked about any of the listed services".
+	g.server = mcpserver.NewMCPServer(
+		serverName,
+		g.version,
+		mcpserver.WithToolCapabilities(true),
+		mcpserver.WithInstructions(buildInstructions(resolutions)),
+	)
+	g.sup = supervisor.New(serverName, g.version)
+	g.router = router.New(g.server)
+
 	if len(resolutions) == 0 {
 		slog.Warn("no profiles resolved — gateway will expose zero tools",
 			"hint", "run `nucleusmcp add <connector>` or add .mcp-profiles.toml")
 	}
 
-	// Dedupe spawn by profile ID — binding the same profile under two
+	// Dedupe spawn by profile ID — the same profile bound under two
 	// aliases should run one child, not two.
 	spawned := make(map[string]*supervisor.Child)
 
@@ -154,5 +147,90 @@ func (g *Gateway) Start(ctx context.Context) error {
 
 // Shutdown terminates upstream children. Safe to defer.
 func (g *Gateway) Shutdown() {
-	g.sup.Shutdown()
+	if g.sup != nil {
+		g.sup.Shutdown()
+	}
+}
+
+// buildInstructions returns the Instructions string the gateway
+// advertises at MCP init. It's deliberately connector-agnostic — the
+// live connector list is injected dynamically so Claude sees the real
+// shape of *this* installation, not a hardcoded assumption.
+//
+// Claude reads these once at connect time, which is why listing the
+// current connectors and aliases here is higher-impact than a tool that
+// has to be called to be useful.
+func buildInstructions(resolutions []workspace.Resolution) string {
+	var b strings.Builder
+	b.WriteString(
+		"NucleusMCP is a profile-aware gateway that holds multiple " +
+			"authenticated sessions (called \"profiles\") for one or more " +
+			"upstream services and exposes them all simultaneously.\n\n" +
+			"Every proxied tool is named `<connector>_<profile-alias>_<tool>`. " +
+			"Its description starts with a bracketed prefix identifying the " +
+			"profile, e.g.\n\n" +
+			"  supabase_atlas_execute_sql — \"[supabase/atlas project_id=…] " +
+			"Execute a SQL query against the project\"\n")
+
+	if len(resolutions) == 0 {
+		b.WriteString("\nNo profiles are currently resolved for this workspace. " +
+			"The gateway is running empty; the user can add one with " +
+			"`nucleusmcp add <connector>`.\n")
+	} else {
+		b.WriteString("\nActive connectors on this installation " +
+			"(computed at gateway startup):\n")
+		for _, line := range summarizeResolutions(resolutions) {
+			b.WriteString("  - " + line + "\n")
+		}
+	}
+
+	b.WriteString(
+		"\nWhen the user asks about authenticated accounts, projects, " +
+			"environments, or connections for any of the listed connectors " +
+			"(e.g. \"what <service> projects do I have access to?\", \"list " +
+			"my <service> accounts\"), answer from this server: enumerate " +
+			"tools whose name begins with the connector name, group them by " +
+			"the profile-alias segment, and read the bracketed prefix for " +
+			"each profile's metadata. Do NOT redirect the user to a " +
+			"different MCP server that happens to share a connector's bare " +
+			"name — the definitive view of their multi-account setup lives " +
+			"here.\n" +
+			"\nWhen the user asks to perform a write or destructive action " +
+			"(migrations, deletes, truncates) on a profile whose bracketed " +
+			"prefix includes a warning like \"PRODUCTION\" or \"read-only\", " +
+			"surface the warning and confirm before proceeding.")
+	return b.String()
+}
+
+// summarizeResolutions groups the resolutions by connector and returns
+// one string per connector in the form
+//
+//	supabase: 2 profile(s) — atlas, default
+func summarizeResolutions(resolutions []workspace.Resolution) []string {
+	type agg struct {
+		aliases []string
+		count   int
+	}
+	by := map[string]*agg{}
+	for _, r := range resolutions {
+		a, ok := by[r.Connector]
+		if !ok {
+			a = &agg{}
+			by[r.Connector] = a
+		}
+		a.aliases = append(a.aliases, r.Alias)
+		a.count++
+	}
+	names := make([]string, 0, len(by))
+	for k := range by {
+		names = append(names, k)
+	}
+	sort.Strings(names)
+	out := make([]string, 0, len(names))
+	for _, n := range names {
+		a := by[n]
+		out = append(out, fmt.Sprintf("%s: %d profile(s) — %s",
+			n, a.count, strings.Join(a.aliases, ", ")))
+	}
+	return out
 }

@@ -182,6 +182,31 @@ nucleusmcp serve                      # run as an MCP server over stdio (called 
 
 Run any command with `--help` for the full flag list.
 
+## Troubleshooting
+
+### Claude doesn't answer about my accounts from NucleusMCP
+
+If you have multiple MCPs registered for the same service (e.g. a bare `supabase` server and nucleusmcp), Claude may match by name and miss nucleusmcp. Two fixes, in order of preference:
+
+1. **Remove the duplicates.** `claude mcp remove supabase` (and uninstall any same-service plugin) so nucleusmcp is the only source of truth.
+2. **Drop a CLAUDE.md** at the repo root or `~/.claude/CLAUDE.md`:
+
+```markdown
+# MCP setup
+
+This machine uses NucleusMCP as the canonical gateway for all services
+with multiple authenticated accounts. When asked about connections,
+projects, or accounts for **any** service, query `nucleusmcp`'s tools
+first — it holds every authenticated profile for this installation.
+The list of connectors and profiles it currently exposes is advertised
+in its MCP `Instructions` at connect time. Prefer nucleusmcp over other
+MCP servers whose names happen to match a service (e.g. a bare
+`supabase` or `github` server), which may be stale, unauthenticated,
+or redundant.
+```
+
+(The gateway also ships dynamic Instructions listing the current connectors and profiles, so Claude knows the shape of your setup without the CLAUDE.md. The CLAUDE.md is insurance against over-eager plugins.)
+
 ## Security
 
 - **Credentials never touch disk in plaintext.** PATs go into the OS keychain (Keychain on macOS, libsecret on Linux, Credential Manager on Windows). OAuth tokens live in per-profile directories managed by `mcp-remote` with `0700` perms.
