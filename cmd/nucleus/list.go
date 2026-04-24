@@ -33,7 +33,7 @@ func newListCmd() *cobra.Command {
 				stderrf("No profiles configured.")
 				stderrf("")
 				stderrf("Add one with:")
-				stderrf("  nucleusmcp add <connector> <name>")
+				stderrf("  nucleus add <connector> <name>")
 				stderrf("")
 				stderrf("Available connectors:")
 				for _, m := range connectors.All() {

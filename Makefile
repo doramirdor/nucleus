@@ -1,5 +1,5 @@
-BINARY  := nucleusmcp
-PKG     := ./cmd/nucleusmcp
+BINARY  := nucleus
+PKG     := ./cmd/nucleus
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 LDFLAGS := -s -w -X main.version=$(VERSION)
 

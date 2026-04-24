@@ -27,7 +27,12 @@ import (
 	"github.com/doramirdor/nucleusmcp/internal/workspace"
 )
 
-const serverName = "nucleusmcp"
+// serverName is the identity the gateway advertises over MCP
+// (what Claude shows in `mcp list`). The CLI binary is named `nucleus`,
+// so the server identity matches. Note that on-disk storage paths and
+// the OS keychain service remain "nucleusmcp" for compatibility with
+// pre-rename installs — see internal/registry + internal/vault.
+const serverName = "nucleus"
 
 // Gateway is the top-level orchestrator.
 type Gateway struct {

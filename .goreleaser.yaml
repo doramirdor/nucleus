@@ -1,14 +1,14 @@
 version: 2
-project_name: nucleusmcp
+project_name: nucleus
 
 before:
   hooks:
     - go mod tidy
 
 builds:
-  - id: nucleusmcp
-    main: ./cmd/nucleusmcp
-    binary: nucleusmcp
+  - id: nucleus
+    main: ./cmd/nucleus
+    binary: nucleus
     env:
       - CGO_ENABLED=0
     goos: [linux, darwin, windows]
@@ -46,7 +46,7 @@ release:
 # are in place.
 #
 # brews:
-#   - name: nucleusmcp
+#   - name: nucleus
 #     repository:
 #       owner: doramirdor
 #       name: homebrew-tap
@@ -55,4 +55,4 @@ release:
 #     description: "Profile-aware MCP gateway — one connector, many accounts"
 #     license: MIT
 #     install: |
-#       bin.install "nucleusmcp"
+#       bin.install "nucleus"

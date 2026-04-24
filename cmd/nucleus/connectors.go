@@ -14,7 +14,7 @@ func newConnectorsCmd() *cobra.Command {
 		Use:   "connectors",
 		Short: "List connectors known to this gateway",
 		Long: `List all connectors — both built-in (shipped with the binary) and
-custom ones you've added via 'nucleusmcp add <name> <URL>'. Custom
+custom ones you've added via 'nucleus add <name> <URL>'. Custom
 manifests live in ~/.nucleusmcp/connectors/.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)

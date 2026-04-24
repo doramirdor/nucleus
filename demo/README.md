@@ -9,14 +9,14 @@ brew install vhs                     # macOS
 # OR
 go install github.com/charmbracelet/vhs@latest
 
-make install                         # puts nucleusmcp on PATH
+make install                         # puts `nucleus` on PATH
 ```
 
 You'll also need at least two profiles registered so the demos have something to show. Easiest path:
 
 ```bash
-nucleusmcp add supabase atlas        # real OAuth — pick a project
-nucleusmcp add supabase default      # real OAuth — pick another
+nucleus add supabase atlas        # real OAuth — pick a project
+nucleus add supabase default      # real OAuth — pick another
 ```
 
 If you want a stubbed state (no real OAuth) just for recording, edit the tapes to drive the CLI into whatever states you prefer.

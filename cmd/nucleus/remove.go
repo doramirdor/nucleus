@@ -17,7 +17,7 @@ func newRemoveCmd() *cobra.Command {
 		Aliases: []string{"rm", "delete"},
 		Short:   "Remove a profile and its credentials",
 		Long: `Remove a profile. The profile ID is "<connector>:<name>" — see the ID
-column in 'nucleusmcp list'.
+column in 'nucleus list'.
 
 For PAT connectors the personal access token is deleted from the OS
 keychain. For OAuth connectors the per-profile OAuth directory under

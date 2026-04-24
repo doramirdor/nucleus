@@ -4,7 +4,7 @@
 #
 # Requires:
 #   - vhs installed        (https://github.com/charmbracelet/vhs)
-#   - nucleusmcp on PATH   (`make install`)
+#   - nucleus on PATH      (`make install`)
 #   - at least one profile registered
 
 Output demo/overview.gif
@@ -25,25 +25,25 @@ Sleep 400ms
 Show
 
 # 1. Built-in + custom connectors
-Type "nucleusmcp connectors"
+Type "nucleus connectors"
 Sleep 300ms
 Enter
 Sleep 3s
 
 # 2. Active profiles
-Type "nucleusmcp list"
+Type "nucleus list"
 Sleep 300ms
 Enter
 Sleep 3s
 
 # 3. Per-profile config (no live probe so the GIF is deterministic)
-Type "nucleusmcp info --no-probe"
+Type "nucleus info --no-probe"
 Sleep 300ms
 Enter
 Sleep 6s
 
 # 4. Register with Claude (print-only)
-Type "nucleusmcp install --print"
+Type "nucleus install --print"
 Sleep 300ms
 Enter
 Sleep 5s

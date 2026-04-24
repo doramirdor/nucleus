@@ -16,7 +16,7 @@ func newUseCmd() *cobra.Command {
 .mcp-profiles.toml binding and no manifest autodetect rule matches, the
 gateway will fall back to the default.
 
-Profile IDs are of the form "<connector>:<name>" — see 'nucleusmcp list'.`,
+Profile IDs are of the form "<connector>:<name>" — see 'nucleus list'.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id := args[0]

@@ -31,7 +31,7 @@ The shape of the problem isn't Claude's fault; it's how the MCP protocol surface
 
 ## What NucleusMCP does
 
-It sits between your MCP client and the real services, holding **profiles** (isolated authenticated sessions) and exposing them all to the client at the same time. Claude sees one connector ("nucleusmcp") but every profile shows up as its own namespace:
+It sits between your MCP client and the real services, holding **profiles** (isolated authenticated sessions) and exposing them all to the client at the same time. Claude sees one connector ("nucleus") but every profile shows up as its own namespace:
 
 ```
 supabase_prod_execute_sql        → prod account, acme-web project
@@ -53,13 +53,13 @@ make install
 # Make sure Go's bin is on PATH (add to your shell rc if needed)
 export PATH="$HOME/go/bin:$PATH"
 
-nucleusmcp --version
+nucleus --version
 ```
 
 Register with Claude Code (detects the `claude` CLI and runs `claude mcp add`):
 
 ```bash
-nucleusmcp install
+nucleus install
 ```
 
 Releases with pre-built binaries (Homebrew tap, Scoop, apt/rpm) are on the roadmap.
@@ -69,7 +69,7 @@ Releases with pre-built binaries (Homebrew tap, Scoop, apt/rpm) are on the roadm
 ### Add your first connection
 
 ```bash
-nucleusmcp add supabase
+nucleus add supabase
 ```
 
 - Prompts for project metadata
@@ -81,13 +81,13 @@ nucleusmcp add supabase
 Add a second profile with a different name (or different account — sign out in your browser between runs for true account isolation):
 
 ```bash
-nucleusmcp add supabase staging
+nucleus add supabase staging
 ```
 
 Both are now live:
 
 ```bash
-nucleusmcp list
+nucleus list
 ```
 
 ```
@@ -124,7 +124,7 @@ When you start the gateway in a directory, this is how it picks which profile(s)
 1. **Explicit `.mcp-profiles.toml`** in cwd or ancestor
 2. **Autodetect** via the connector's manifest rule (e.g. reading `project_id` from `supabase/config.toml`)
 3. **Only one profile** registered for the connector → use it
-4. **User-set default** via `nucleusmcp use`
+4. **User-set default** via `nucleus use`
 5. **Fallback**: expose *every* profile as a separate namespace
 
 Whatever rule fires is logged, so you can always see why Claude sees what it sees.
@@ -165,8 +165,8 @@ profile = "work"
 Any HTTP MCP server works, not just the built-ins:
 
 ```bash
-nucleusmcp add --transport http linear https://mcp.linear.app/mcp
-nucleusmcp add --transport http my-internal https://mcp.acme.corp
+nucleus add --transport http linear https://mcp.linear.app/mcp
+nucleus add --transport http my-internal https://mcp.acme.corp
 ```
 
 The gateway saves a manifest under `~/.nucleusmcp/connectors/<name>.toml` and bridges to it via [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) — OAuth/PKCE/DCR all handled for you.
@@ -174,14 +174,14 @@ The gateway saves a manifest under `~/.nucleusmcp/connectors/<name>.toml` and br
 ## CLI reference
 
 ```bash
-nucleusmcp connectors                 # list known connectors (builtin + custom)
-nucleusmcp list                       # list profiles (connections)
-nucleusmcp info [profile-id]          # config + live upstream probe
-nucleusmcp add <connector> [name]     # register a new profile (interactive OAuth or PAT)
-nucleusmcp remove <profile-id>        # delete a profile + credentials
-nucleusmcp use <profile-id>           # mark as default for its connector
-nucleusmcp install [claude]           # register with Claude Code (or print config)
-nucleusmcp serve                      # run as an MCP server over stdio (called by client)
+nucleus connectors                 # list known connectors (builtin + custom)
+nucleus list                       # list profiles (connections)
+nucleus info [profile-id]          # config + live upstream probe
+nucleus add <connector> [name]     # register a new profile (interactive OAuth or PAT)
+nucleus remove <profile-id>        # delete a profile + credentials
+nucleus use <profile-id>           # mark as default for its connector
+nucleus install [claude]           # register with Claude Code (or print config)
+nucleus serve                      # run as an MCP server over stdio (called by client)
 ```
 
 Run any command with `--help` for the full flag list.
@@ -190,9 +190,9 @@ Run any command with `--help` for the full flag list.
 
 ### Claude doesn't answer about my accounts from NucleusMCP
 
-If you have multiple MCPs registered for the same service (e.g. a bare `supabase` server and nucleusmcp), Claude may match by name and miss nucleusmcp. Two fixes, in order of preference:
+If you have multiple MCPs registered for the same service (e.g. a bare `supabase` server and the nucleus gateway), Claude may match by name and miss nucleus. Two fixes, in order of preference:
 
-1. **Remove the duplicates.** `claude mcp remove supabase` (and uninstall any same-service plugin) so nucleusmcp is the only source of truth.
+1. **Remove the duplicates.** `claude mcp remove supabase` (and uninstall any same-service plugin) so nucleus is the only source of truth.
 2. **Drop a CLAUDE.md** at the repo root or `~/.claude/CLAUDE.md`:
 
 ```markdown
@@ -200,10 +200,10 @@ If you have multiple MCPs registered for the same service (e.g. a bare `supabase
 
 This machine uses NucleusMCP as the canonical gateway for all services
 with multiple authenticated accounts. When asked about connections,
-projects, or accounts for **any** service, query `nucleusmcp`'s tools
+projects, or accounts for **any** service, query `nucleus`'s tools
 first — it holds every authenticated profile for this installation.
 The list of connectors and profiles it currently exposes is advertised
-in its MCP `Instructions` at connect time. Prefer nucleusmcp over other
+in its MCP `Instructions` at connect time. Prefer nucleus over other
 MCP servers whose names happen to match a service (e.g. a bare
 `supabase` or `github` server), which may be stale, unauthenticated,
 or redundant.
@@ -262,7 +262,7 @@ MCP Client (Claude, Cursor, ...)
 - [x] Tool description prefix for client context
 - [ ] Idle reaper / on-demand spawn (today: eager at startup)
 - [ ] Mid-session hot-swap on cwd change
-- [ ] Audit log + `nucleusmcp logs`
+- [ ] Audit log + `nucleus logs`
 - [ ] Native OAuth (replace `mcp-remote` dependency)
 - [ ] Write-confirmation policy
 - [ ] Managed multi-tenant tier (team-shared profiles)

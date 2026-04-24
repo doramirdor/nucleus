@@ -46,7 +46,7 @@ stream; logs go to stderr.`,
 			gw := server.New(reg, newVault(), version)
 			defer gw.Shutdown()
 
-			slog.Info("nucleusmcp starting", "version", version, "config", path)
+			slog.Info("nucleus starting", "version", version, "config", path)
 			return gw.Start(ctx)
 		},
 	}

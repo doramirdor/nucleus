@@ -7,7 +7,7 @@ Thanks for taking the time. This is a small project and contributions don't need
 ```bash
 git clone https://github.com/doramirdor/nucleusmcp
 cd nucleusmcp
-make build       # go build → ./bin/nucleusmcp
+make build       # go build → ./bin/nucleus
 make test        # go test ./...
 make vet         # go vet ./...
 make install     # go install into $GOBIN (usually ~/go/bin)
@@ -19,8 +19,8 @@ Requires **Go 1.23+**. No CGO required; `modernc.org/sqlite` is a pure-Go driver
 
 ```bash
 make install
-nucleusmcp install              # registers with Claude Code
-nucleusmcp add supabase         # or any built-in / custom connector
+nucleus install              # registers with Claude Code
+nucleus add supabase         # or any built-in / custom connector
 # restart Claude Code
 ```
 
@@ -39,12 +39,12 @@ Connectors are pure data (a `manifest.Manifest`) plus optional workspace-autodet
 3. Register the manifest in `builtins`.
 4. (Optional) Implement a `DiscovererFunc` in `internal/connectors/discovery.go` that calls a tool on the live MCP client after OAuth to populate metadata. See `discoverSupabaseProjects` for an example.
 
-Every built-in is subject to the same test: `nucleusmcp add <connector>` must complete end-to-end against a real account and produce a working profile.
+Every built-in is subject to the same test: `nucleus add <connector>` must complete end-to-end against a real account and produce a working profile.
 
 ## Code organization
 
 ```
-cmd/nucleusmcp        # CLI entrypoint (cobra commands)
+cmd/nucleus           # CLI entrypoint (cobra commands)
 internal/server       # gateway orchestration
 internal/supervisor   # upstream MCP child lifecycle
 internal/router       # tool proxy + namespacing

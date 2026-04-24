@@ -50,17 +50,17 @@ and proxies it via mcp-remote (OAuth + PKCE handled for you).
 
 Examples:
   # Claude-parity syntax (long form):
-  nucleusmcp add --scope project --transport http supabase https://mcp.supabase.com/mcp
+  nucleus add --scope project --transport http supabase https://mcp.supabase.com/mcp
 
   # Shorter forms that do the same thing:
-  nucleusmcp add supabase
-  nucleusmcp add supabase work
+  nucleus add supabase
+  nucleus add supabase work
 
   # Custom / unknown MCPs — bring any HTTP URL:
-  nucleusmcp add --transport http my-mcp https://example.com/mcp
+  nucleus add --transport http my-mcp https://example.com/mcp
 
   # PAT connector:
-  nucleusmcp add github personal --metadata github_user=amirdor`,
+  nucleus add github personal --metadata github_user=amirdor`,
 		Args: cobra.RangeArgs(1, 3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			connectorName := args[0]
@@ -147,9 +147,9 @@ func resolveManifest(name, url, transport string) (manifest.Manifest, error) {
 	// Unknown connector — must be an HTTP URL.
 	if url == "" {
 		return manifest.Manifest{}, fmt.Errorf(
-			"unknown connector %q — either use a built-in (try `nucleusmcp connectors`) "+
+			"unknown connector %q — either use a built-in (try `nucleus connectors`) "+
 				"or pass a URL to register a custom one, e.g.\n"+
-				"  nucleusmcp add --transport http %s https://example.com/mcp",
+				"  nucleus add --transport http %s https://example.com/mcp",
 			name, name)
 	}
 	if transport == "" {
@@ -251,7 +251,7 @@ func promptCollision(existing registry.Profile) (addAction, string, error) {
 }
 
 // promptExistingMenu is the "what do you want to do" menu shown when the
-// user runs `nucleusmcp add <connector>` without a name and profiles for
+// user runs `nucleus add <connector>` without a name and profiles for
 // that connector already exist.
 func promptExistingMenu(
 	m manifest.Manifest, existing []registry.Profile,
@@ -481,7 +481,7 @@ func runOAuthAndDiscover(
 	initReq := mcp.InitializeRequest{}
 	initReq.Params.ProtocolVersion = mcp.LATEST_PROTOCOL_VERSION
 	initReq.Params.ClientInfo = mcp.Implementation{
-		Name:    "nucleusmcp-add",
+		Name:    "nucleus-add",
 		Version: version,
 	}
 	if _, err := c.Initialize(ctx, initReq); err != nil {

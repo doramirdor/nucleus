@@ -21,7 +21,7 @@ Sleep 400ms
 Show
 
 # Show the two registered profiles
-Type "nucleusmcp list"
+Type "nucleus list"
 Enter
 Sleep 3s
 
@@ -44,7 +44,7 @@ Sleep 4s
 Type "# starting the gateway logs which profile each alias binds to:"
 Enter
 Sleep 800ms
-Type "echo '' | nucleusmcp serve 2>&1 >/dev/null | grep -E 'workspace|resolved profile|alias ready' | head -8"
+Type "echo '' | nucleus serve 2>&1 >/dev/null | grep -E 'workspace|resolved profile|alias ready' | head -8"
 Enter
 Sleep 6s
 

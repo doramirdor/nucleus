@@ -2,6 +2,26 @@
 
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (starting at 0.1.0).
 
+## [Unreleased]
+
+### Changed
+- **CLI binary renamed `nucleusmcp` → `nucleus`.** The directory at `cmd/nucleusmcp/` moved to `cmd/nucleus/`; the default binary produced by `make install` is now `nucleus`. The MCP server identity advertised to clients (Claude, Cursor, …) is also now `nucleus`. Product name in prose stays **NucleusMCP**.
+- Go module path is unchanged (`github.com/doramirdor/nucleusmcp`).
+- On-disk storage paths (`~/.nucleusmcp/registry.db`, `~/.nucleusmcp/oauth/…`, `~/.nucleusmcp/connectors/…`) and the OS keychain service string (`nucleusmcp`) are unchanged, so existing profiles and credentials remain accessible after the rename.
+
+### Migration for pre-rename installs
+```bash
+# Rebuild to produce the new `nucleus` binary
+make install
+
+# Update Claude's registration
+claude mcp remove nucleusmcp
+nucleus install
+
+# Optionally update any /usr/local/bin symlink
+sudo ln -sf "$HOME/go/bin/nucleus" /usr/local/bin/nucleus
+```
+
 ## [0.1.1] — 2026-04-23
 
 ### Added
@@ -28,7 +48,7 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 - HTTP / OAuth connectors bridged via `mcp-remote` with per-profile isolated auth directories
 - Post-OAuth resource discovery: picker lists projects from the upstream after auth (Supabase)
 - Tool description prefix: proxied tools carry `[connector/alias metadata]` and optional user note so MCP clients read profile context natively
-- Custom connector support: `nucleusmcp add <name> --transport http <url>` saves a manifest under `~/.nucleusmcp/connectors/`
+- Custom connector support: `nucleus add <name> --transport http <url>` saves a manifest under `~/.nucleusmcp/connectors/`
 - Built-in connectors: Supabase (OAuth) and GitHub (PAT)
 - CLI: `add`, `remove`, `list`, `info`, `use`, `connectors`, `install`, `serve`
 

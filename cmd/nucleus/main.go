@@ -1,4 +1,4 @@
-// Command nucleusmcp runs the NucleusMCP gateway and its CLI.
+// Command nucleus runs the NucleusMCP gateway and its CLI.
 //
 // The gateway is a profile-aware MCP server that Claude/Cursor/etc. connect
 // to. It spawns upstream MCP servers (Supabase, Gmail, ...) on demand,
@@ -22,7 +22,7 @@ var configPath string
 
 func main() {
 	root := &cobra.Command{
-		Use:     "nucleusmcp",
+		Use:     "nucleus",
 		Short:   "Profile-aware MCP gateway — one connector, many accounts",
 		Version: version,
 		// We manage our own error printing; silence cobra's auto-usage

@@ -18,19 +18,19 @@ func newInstallCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install [client]",
 		Short: "Register the gateway with an MCP client (default: claude)",
-		Long: `Register nucleusmcp with an MCP client so it starts automatically.
+		Long: `Register the nucleus gateway with an MCP client so it starts automatically.
 
 Supported clients:
   claude   — Claude Code / Claude Desktop
 
-If the 'claude' CLI is on your PATH, runs 'claude mcp add nucleusmcp ...'
+If the 'claude' CLI is on your PATH, runs 'claude mcp add nucleus ...'
 for you. Otherwise prints a JSON snippet you can paste into Claude's
 config file manually.
 
 Examples:
-  nucleusmcp install                    # registers with Claude
-  nucleusmcp install claude --scope user
-  nucleusmcp install --print            # print config, don't modify anything`,
+  nucleus install                    # registers with Claude
+  nucleus install claude --scope user
+  nucleus install --print            # print config, don't modify anything`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client := "claude"
@@ -52,7 +52,11 @@ Examples:
 	return cmd
 }
 
-// installClaude wires nucleusmcp into Claude Code. Preferred path is the
+// mcpEntryName is the name we use when registering with an MCP client.
+// Matches the CLI binary so `claude mcp list` shows a predictable label.
+const mcpEntryName = "nucleus"
+
+// installClaude wires nucleus into Claude Code. Preferred path is the
 // `claude` CLI — it knows where its config lives and handles merging.
 // Fallback: print a JSON snippet the user can drop into the right file.
 func installClaude(printOnly bool, scope string) error {
@@ -87,7 +91,7 @@ func installClaude(printOnly bool, scope string) error {
 	if scope != "" {
 		args = append(args, "--scope", scope)
 	}
-	args = append(args, "nucleusmcp", absBin, "serve")
+	args = append(args, mcpEntryName, absBin, "serve")
 
 	runCmd := exec.Command(claudeCli, args...)
 	runCmd.Stdout = os.Stdout
@@ -97,11 +101,11 @@ func installClaude(printOnly bool, scope string) error {
 	}
 
 	stderrf("")
-	stderrf("✓ Registered nucleusmcp with Claude.")
+	stderrf("✓ Registered %s with Claude.", mcpEntryName)
 	stderrf("  Restart your Claude Code session to pick up the new tools.")
 	stderrf("")
 	stderrf("Next: add at least one profile, e.g.")
-	stderrf("  nucleusmcp add supabase")
+	stderrf("  nucleus add supabase")
 	return nil
 }
 
@@ -110,7 +114,7 @@ func installClaude(printOnly bool, scope string) error {
 func printClaudeConfig(bin string) error {
 	entry := map[string]any{
 		"mcpServers": map[string]any{
-			"nucleusmcp": map[string]any{
+			mcpEntryName: map[string]any{
 				"command": bin,
 				"args":    []string{"serve"},
 			},

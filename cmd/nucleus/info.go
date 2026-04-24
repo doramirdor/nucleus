@@ -28,9 +28,9 @@ func newInfoCmd() *cobra.Command {
 with this profile's credentials to confirm auth is healthy and report
 the resources visible to it.
 
-  nucleusmcp info                  # one section per profile
-  nucleusmcp info supabase:prod    # just that one
-  nucleusmcp info --no-probe       # static config only, no upstream calls
+  nucleus info                  # one section per profile
+  nucleus info supabase:prod    # just that one
+  nucleus info --no-probe       # static config only, no upstream calls
 
 The probe spawns the upstream child briefly and tears it down; npm-based
 children may be slow on first run while npx fetches the package.`,
@@ -58,7 +58,7 @@ children may be slow on first run while npx fetches the package.`,
 					return err
 				}
 				if len(targets) == 0 {
-					stderrf("No profiles configured. Add one with `nucleusmcp add <connector>`.")
+					stderrf("No profiles configured. Add one with `nucleus add <connector>`.")
 					return nil
 				}
 			}
@@ -166,7 +166,7 @@ const probeTimeout = 60 * time.Second
 // probeProfile spawns the upstream briefly, lists tools, optionally runs
 // the connector's discoverer, then tears down.
 func probeProfile(p registry.Profile, m manifest.Manifest) (probeResult, error) {
-	sup := supervisor.New("nucleusmcp-info", version)
+	sup := supervisor.New("nucleus-info", version)
 	defer sup.Shutdown()
 
 	ctx, cancel := context.WithTimeout(context.Background(), probeTimeout)
