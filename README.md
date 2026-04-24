@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.gif" alt="NucleusMCP — profile-aware, multi-account MCP gateway" width="900">
+</p>
+
 # NucleusMCP
 
 **One connector, many accounts.** A local MCP gateway that lets Claude (and other MCP clients) connect to multiple authenticated accounts of the same service — prod and staging Supabase, work and personal Gmail, two GitHub orgs — without disconnecting, reconnecting, or losing context.
