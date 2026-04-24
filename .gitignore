@@ -10,3 +10,4 @@ config.local.toml
 # vhs temp files (the .gif outputs are committed)
 *.ascii
 *.webm
+logo-gif/

@@ -2,7 +2,22 @@
 
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (starting at 0.1.0).
 
-## [Unreleased]
+## [0.1.1] — 2026-04-23
+
+### Added
+- Dynamic server `Instructions` advertised at MCP init: Claude (and any MCP client) now reads the live connector + profile list at connect time, so asking *"what X connections do you have?"* routes through nucleusmcp without the user naming the gateway.
+- Tag-triggered release workflow (`.github/workflows/release.yml`). Pushing `vX.Y.Z` produces cross-platform binaries on a GitHub release via GoReleaser.
+- First unit-test round: registry (migrations, CRUD, defaults), connectors (built-in lookup, custom save/load roundtrip), router (namespacing + description prefix), workspace parser (both toml forms + ancestor walk).
+
+### Changed
+- README: sharpened the "Why" section with the concrete one-connector-per-MCP pain flow; reframed `.mcp-profiles.toml` as optional (the resolver's expose-all fallback covers the default case).
+- Demo GIFs re-recorded: clean `$` prompt, scratch-dir sandboxing, no heredoc continuation artifacts.
+
+### Fixed
+- Resolver used to error when multiple profiles existed with no binding/autodetect/default; it now exposes every profile as a distinct namespace by default.
+- `supabase/config.toml` autodetect with a non-matching `project_id` no longer blocks resolution — falls through to expose-all.
+
+## [0.1.0] — 2026-04-23
 
 ### Added
 - Gateway with stdio MCP server, per-profile credential injection, and transparent tool proxy
