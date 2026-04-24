@@ -37,7 +37,7 @@ func Discoverer(connectorName string) (DiscovererFunc, bool) {
 }
 
 // discoverers is the per-connector registry. Add a DiscovererFunc here
-// to teach `nucleusmcp add <connector>` how to auto-populate metadata
+// to teach `nucleus add <connector>` how to auto-populate metadata
 // after OAuth.
 var discoverers = map[string]DiscovererFunc{
 	"supabase": discoverSupabaseProjects,

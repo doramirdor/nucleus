@@ -96,7 +96,7 @@ func (g *Gateway) Start(ctx context.Context) error {
 
 	if len(resolutions) == 0 {
 		slog.Warn("no profiles resolved — gateway will expose zero tools",
-			"hint", "run `nucleusmcp add <connector>` or add .mcp-profiles.toml")
+			"hint", "run `nucleus add <connector>` or add .mcp-profiles.toml")
 	}
 
 	// Dedupe spawn by profile ID — the same profile bound under two
@@ -168,7 +168,7 @@ func (g *Gateway) Shutdown() {
 func buildInstructions(resolutions []workspace.Resolution) string {
 	var b strings.Builder
 	b.WriteString(
-		"NucleusMCP is a profile-aware gateway that holds multiple " +
+		"Nucleus is a profile-aware gateway that holds multiple " +
 			"authenticated sessions (called \"profiles\") for one or more " +
 			"upstream services and exposes them all simultaneously.\n\n" +
 			"Every proxied tool is named `<connector>_<profile-alias>_<tool>`. " +
@@ -180,7 +180,7 @@ func buildInstructions(resolutions []workspace.Resolution) string {
 	if len(resolutions) == 0 {
 		b.WriteString("\nNo profiles are currently resolved for this workspace. " +
 			"The gateway is running empty; the user can add one with " +
-			"`nucleusmcp add <connector>`.\n")
+			"`nucleus add <connector>`.\n")
 	} else {
 		b.WriteString("\nActive connectors on this installation " +
 			"(computed at gateway startup):\n")

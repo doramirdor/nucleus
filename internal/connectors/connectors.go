@@ -391,7 +391,7 @@ var github = manifest.Manifest{
 		{
 			Key:         "github_user",
 			Label:       "GitHub username or org (optional, for display)",
-			Description: "Who this PAT belongs to — shown in `nucleusmcp list`. Not used for resolution yet.",
+			Description: "Who this PAT belongs to — shown in `nucleus list`. Not used for resolution yet.",
 		},
 	},
 }

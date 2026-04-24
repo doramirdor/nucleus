@@ -1,4 +1,4 @@
-# Contributing to NucleusMCP
+# Contributing to Nucleus
 
 Thanks for taking the time. This is a small project and contributions don't need to be polished to land — issues, design questions, and WIP PRs are all welcome.
 

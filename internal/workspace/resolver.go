@@ -16,7 +16,7 @@ const (
 	SourceExplicit   Source = "explicit"   // .mcp-profiles.toml named the profile
 	SourceAutodetect Source = "autodetect" // manifest autodetect rule matched
 	SourceOnlyOne    Source = "only_one"   // only one profile exists for the connector
-	SourceDefault    Source = "default"    // user-set default via `nucleusmcp use`
+	SourceDefault    Source = "default"    // user-set default via `nucleus use`
 	SourceAll        Source = "all"        // fallback: expose every profile for this connector
 )
 
@@ -175,7 +175,7 @@ func (r *Resolver) resolveOne(connector string, profiles []registry.Profile) ([]
 			Profile:   def,
 			Alias:     def.Name,
 			Source:    SourceDefault,
-			Hint:      "user-set default via `nucleusmcp use`",
+			Hint:      "user-set default via `nucleus use`",
 		}}, nil
 	} else if !errors.Is(err, registry.ErrNotFound) {
 		return nil, fmt.Errorf("lookup default: %w", err)

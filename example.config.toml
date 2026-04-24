@@ -1,10 +1,10 @@
-# NucleusMCP — M1 example config.
+# Nucleus — M1 example config.
 #
 # Copy to ~/.nucleusmcp/config.toml and edit.
 #
 # In M1 connectors are declared directly here with the command + env needed
 # to run the upstream MCP server. In M2 this file will shrink to gateway
-# settings only and connectors will be managed via `nucleusmcp add`.
+# settings only and connectors will be managed via `nucleus add`.
 
 [[connector]]
 name    = "supabase"

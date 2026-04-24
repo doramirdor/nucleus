@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="assets/banner.gif" alt="NucleusMCP — profile-aware, multi-account MCP gateway" width="900">
+  <img src="assets/banner.gif" alt="Nucleus — profile-aware, multi-account MCP gateway" width="900">
 </p>
 
-# NucleusMCP
+# Nucleus
 
 **One connector, many accounts.** A local MCP gateway that lets Claude (and other MCP clients) connect to multiple authenticated accounts of the same service — prod and staging Supabase, work and personal Gmail, two GitHub orgs — without disconnecting, reconnecting, or losing context.
 
-![NucleusMCP overview](demo/overview.gif)
+![Nucleus overview](demo/overview.gif)
 
 ---
 
@@ -29,7 +29,7 @@ Every switch is 2–5 minutes of yak-shaving, a lost conversation, and an interr
 
 The shape of the problem isn't Claude's fault; it's how the MCP protocol surfaces "one server, one connection" to the client. But it means the modern way real engineers work — one laptop, many accounts, many projects — collides head-on with the tool every single time you switch.
 
-## What NucleusMCP does
+## What Nucleus does
 
 It sits between your MCP client and the real services, holding **profiles** (isolated authenticated sessions) and exposing them all to the client at the same time. Claude sees one connector ("nucleus") but every profile shows up as its own namespace:
 
@@ -206,7 +206,7 @@ Run any command with `--help` for the full flag list.
 
 ## Troubleshooting
 
-### Claude doesn't answer about my accounts from NucleusMCP
+### Claude doesn't answer about my accounts from Nucleus
 
 If you have multiple MCPs registered for the same service (e.g. a bare `supabase` server and the nucleus gateway), Claude may match by name and miss nucleus. Two fixes, in order of preference:
 
@@ -216,7 +216,7 @@ If you have multiple MCPs registered for the same service (e.g. a bare `supabase
 ```markdown
 # MCP setup
 
-This machine uses NucleusMCP as the canonical gateway for all services
+This machine uses Nucleus as the canonical gateway for all services
 with multiple authenticated accounts. When asked about connections,
 projects, or accounts for **any** service, query `nucleus`'s tools
 first — it holds every authenticated profile for this installation.
@@ -244,7 +244,7 @@ MCP Client (Claude, Cursor, ...)
         │  MCP protocol (stdio)
         ▼
 ┌───────────────────────────────────────────┐
-│  NucleusMCP gateway                       │
+│  Nucleus gateway                       │
 │  ┌─────────────────────────────────────┐  │
 │  │  Workspace resolver                 │  │  reads cwd config,
 │  │                                     │  │  picks profile(s)

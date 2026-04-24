@@ -17,9 +17,10 @@ Set Theme "Catppuccin Mocha"
 Set TypingSpeed 45ms
 Set PlaybackSpeed 1.0
 
-# Setup: scratch dir + clean prompt. Hidden so the GIF starts clean.
+# Setup: scratch dir + clean prompt + ensure `nucleus` from go install is
+# on PATH. Hidden so the GIF starts clean.
 Hide
-Type `PS1='$ ' && cd $(mktemp -d -t nucleus-overview.XXX) && clear`
+Type `PS1='$ ' && export PATH="$HOME/go/bin:$PATH" && cd $(mktemp -d -t nucleus-overview.XXX) && clear`
 Enter
 Sleep 400ms
 Show

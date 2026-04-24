@@ -45,7 +45,7 @@ type Manifest struct {
 	// used in the connectors registry.
 	Name string
 
-	// Description is one-line human copy shown by `nucleusmcp connectors`.
+	// Description is one-line human copy shown by `nucleus connectors`.
 	Description string
 
 	// Auth is how profiles of this connector authenticate.
@@ -59,7 +59,7 @@ type Manifest struct {
 	// the last arg when spawning the mcp-remote bridge.
 	URL string
 
-	// PATInstructions is shown to the user during `nucleusmcp add` for
+	// PATInstructions is shown to the user during `nucleus add` for
 	// AuthPAT connectors. Free-form; usually a URL to the dashboard page
 	// where tokens are minted.
 	PATInstructions string

@@ -2,10 +2,20 @@
 
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (starting at 0.1.0).
 
+## [0.1.3] — 2026-04-24
+
+### Changed
+- **Product name is now just "Nucleus"** across all prose (README, CONTRIBUTING, server Instructions, demo docs, Go package comments). Previously "NucleusMCP". Tagline tightened to *"one MCP to recommend them all"* — MCP stays as a protocol reference, not as part of the product name.
+- Banner (`assets/banner.gif`) re-rendered: title now reads **Nucleus** (no split `NucleusMCP` word), orbital runes simplified.
+- Demo GIFs re-recorded against the renamed `nucleus` binary so every on-screen command matches the current CLI.
+
+### Unchanged
+- Repo name, Go module path, on-disk storage paths, and OS keychain service string (`nucleusmcp`) all stay the same to avoid breaking existing installs and import paths.
+
 ## [0.1.2] — 2026-04-24
 
 ### Changed
-- **CLI binary renamed `nucleusmcp` → `nucleus`.** The directory at `cmd/nucleusmcp/` moved to `cmd/nucleus/`; the default binary produced by `make install` is now `nucleus`. The MCP server identity advertised to clients (Claude, Cursor, …) is also now `nucleus`. Product name in prose stays **NucleusMCP**.
+- **CLI binary renamed `nucleusmcp` → `nucleus`.** The directory at `cmd/nucleusmcp/` moved to `cmd/nucleus/`; the default binary produced by `make install` is now `nucleus`. The MCP server identity advertised to clients (Claude, Cursor, …) is also now `nucleus`. Product name in all prose / docs is now just **Nucleus** (repo name and Go module path stay `nucleusmcp` to avoid breaking import paths and clone URLs).
 - Go module path is unchanged (`github.com/doramirdor/nucleusmcp`).
 - On-disk storage paths (`~/.nucleusmcp/registry.db`, `~/.nucleusmcp/oauth/…`, `~/.nucleusmcp/connectors/…`) and the OS keychain service string (`nucleusmcp`) are unchanged, so existing profiles and credentials remain accessible after the rename.
 

@@ -13,9 +13,9 @@ Set Height 900
 Set Theme "Catppuccin Mocha"
 Set TypingSpeed 45ms
 
-# Setup: scratch dir, clean prompt. All hidden.
+# Setup: scratch dir, clean prompt, PATH. All hidden.
 Hide
-Type `PS1='$ ' && cd $(mktemp -d -t nucleus-multi.XXX) && clear`
+Type `PS1='$ ' && export PATH="$HOME/go/bin:$PATH" && cd $(mktemp -d -t nucleus-multi.XXX) && clear`
 Enter
 Sleep 400ms
 Show

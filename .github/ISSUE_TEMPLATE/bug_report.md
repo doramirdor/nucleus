@@ -29,7 +29,7 @@ labels: bug
 
 ### Logs
 
-<!-- Stderr from `nucleusmcp serve` or the failing CLI command. Redact any tokens before pasting. -->
+<!-- Stderr from `nucleus serve` or the failing CLI command. Redact any tokens before pasting. -->
 
 ```
 ```

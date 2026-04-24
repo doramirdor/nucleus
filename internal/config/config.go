@@ -1,4 +1,4 @@
-// Package config loads NucleusMCP gateway settings from TOML.
+// Package config loads Nucleus gateway settings from TOML.
 //
 // In M2 there are no required settings — the file is optional. Keeping the
 // package in place gives later milestones a single home for gateway-wide

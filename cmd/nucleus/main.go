@@ -1,4 +1,4 @@
-// Command nucleus runs the NucleusMCP gateway and its CLI.
+// Command nucleus runs the Nucleus gateway and its CLI.
 //
 // The gateway is a profile-aware MCP server that Claude/Cursor/etc. connect
 // to. It spawns upstream MCP servers (Supabase, Gmail, ...) on demand,
