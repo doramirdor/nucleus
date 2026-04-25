@@ -53,26 +53,26 @@ brew install doramirdor/homebrew-tap/nucleus
 ### `go install`
 
 ```bash
-go install github.com/doramirdor/nucleusmcp/cmd/nucleus@latest
+go install github.com/doramirdor/nucleus/cmd/nucleus@latest
 ```
 
 (Requires Go 1.23+. Binary lands in `$GOBIN`, usually `~/go/bin`.)
 
 ### Pre-built binaries
 
-Download the archive for your platform from [the latest release](https://github.com/doramirdor/nucleusmcp/releases/latest), extract, and drop `nucleus` on your PATH.
+Download the archive for your platform from [the latest release](https://github.com/doramirdor/nucleus/releases/latest), extract, and drop `nucleus` on your PATH.
 
 ### From source
 
 ```bash
-git clone https://github.com/doramirdor/nucleusmcp
-cd nucleusmcp
+git clone https://github.com/doramirdor/nucleus
+cd nucleus
 make install
 export PATH="$HOME/go/bin:$PATH"   # if not already
 nucleus --version
 ```
 
-> The product is named **Nucleus**; the GitHub repo and Go module path are `nucleusmcp`, and local state lives under `~/.nucleusmcp/`. These internals kept the legacy name on purpose so pre-rebrand installs and import paths don't break.
+> Local state lives under `~/.nucleusmcp/` and the OS keychain service is `nucleusmcp` — these internals kept the legacy name on purpose so pre-rebrand installs don't lose access to existing profiles.
 
 ### Register with Claude
 
@@ -261,27 +261,27 @@ Not yet shipped: write-confirmation policy enforcement, audit log, process sandb
 MCP Client (Claude, Cursor, ...)
         │  MCP protocol (stdio)
         ▼
-┌────────────────────────────────────────────┐
+┌───────────────────────────────────────────┐
 │  Nucleus gateway                           │
-│  ┌──────────────────────────────────────┐  │
+│  ┌───────────────────────────────────┐  │
 │  │  Workspace resolver                  │  │  reads cwd config,
 │  │                                      │  │  picks profile(s)
-│  └────────────────┬─────────────────────┘  │
+│  └────────────────┬───────────────────┘  │
 │                   │                         │
-│  ┌────────────────▼─────────────────────┐  │
+│  ┌────────────────▼───────────────────┐  │
 │  │  Supervisor — spawns upstream MCPs   │  │
 │  │  • stdio connectors (PAT env var)    │  │
 │  │  • HTTP connectors via mcp-remote    │  │
-│  └────────────────┬─────────────────────┘  │
+│  └────────────────┬───────────────────┘  │
 │                   │                         │
-│  ┌────────────────▼─────────────────────┐  │
+│  ┌────────────────▼───────────────────┐  │
 │  │  Router — tool namespacing + proxy   │  │
 │  │  <connector>_<alias>_<tool>          │  │
-│  └──────────────────────────────────────┘  │
+│  └────────────────────────────────────┘  │
 │                                             │
 │  Registry (SQLite) · Vault (OS keychain)   │
 │  ~/.nucleusmcp/                             │
-└────────────────────────────────────────────┘
+└───────────────────────────────────────────┘
         │                           │
         ▼ stdio                     ▼ HTTP + OAuth (via mcp-remote)
   local MCP (GitHub, ...)   hosted MCP (Supabase, Linear, ...)
