@@ -49,12 +49,27 @@ internal/server       # gateway orchestration
 internal/supervisor   # upstream MCP child lifecycle
 internal/router       # tool proxy + namespacing
 internal/workspace    # .mcp-profiles.toml + resolver
-internal/registry     # SQLite profile store
-internal/vault        # OS keychain wrapper + OAuth dirs
+internal/registry     # SQLite profile store (impls registry.Store)
+internal/vault        # OS keychain wrapper (impls vault.Backend)
 internal/connectors   # built-in manifests + discoverers
 internal/config       # gateway-level settings (stub for future)
 pkg/manifest          # public connector-manifest schema
 ```
+
+### Storage seams (registry.Store, vault.Backend)
+
+`internal/server.Gateway` takes its profile store and credential vault
+as **interfaces**, not concrete types:
+
+- `registry.Store` — profile persistence. Default OSS impl: SQLite
+  (`*registry.Registry`).
+- `vault.Backend` — per-profile credential storage + per-profile OAuth
+  token directories. Default OSS impl: OS keychain + `~/.nucleusmcp/oauth/`
+  (`*vault.Vault`).
+
+The interfaces are tenant-agnostic on purpose — multi-tenancy belongs
+in the construction site (per-request wrapper), not in every method
+signature.
 
 ## Style
 

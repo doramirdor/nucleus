@@ -43,13 +43,13 @@ type Skip struct {
 
 // Resolver produces Resolutions from a workspace config + registry + cwd.
 type Resolver struct {
-	reg *registry.Registry
+	reg registry.Store
 	cfg *Config
 	cwd string
 }
 
 // NewResolver builds a resolver for the given workspace dir.
-func NewResolver(reg *registry.Registry, cfg *Config, workspaceDir string) *Resolver {
+func NewResolver(reg registry.Store, cfg *Config, workspaceDir string) *Resolver {
 	return &Resolver{reg: reg, cfg: cfg, cwd: workspaceDir}
 }
 
