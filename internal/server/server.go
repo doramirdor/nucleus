@@ -42,9 +42,13 @@ import (
 const serverName = "nucleus"
 
 // Gateway is the top-level orchestrator.
+//
+// Storage is taken via interfaces so alternative or per-tenant
+// implementations can plug in without forking. The OSS binary wires
+// *registry.Registry (SQLite) and *vault.Vault (OS keychain).
 type Gateway struct {
-	reg     *registry.Registry
-	vlt     *vault.Vault
+	reg     registry.Store
+	vlt     vault.Backend
 	version string
 
 	// constructed in Prepare, after we know the resolutions
@@ -54,7 +58,7 @@ type Gateway struct {
 }
 
 // New builds a Gateway. Call Prepare then ServeStdio / ServeHTTP.
-func New(reg *registry.Registry, vlt *vault.Vault, version string) *Gateway {
+func New(reg registry.Store, vlt vault.Backend, version string) *Gateway {
 	return &Gateway{reg: reg, vlt: vlt, version: version}
 }
 
