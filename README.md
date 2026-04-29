@@ -42,6 +42,17 @@ github_personal_create_issue     → personal PAT
 
 Tool descriptions carry the profile context (`[supabase/prod project_id=…]`) — every tool Claude sees is labeled with the account it hits, so the question *"which Supabase did you query?"* has an answer right in the tool name. No disconnect. No reconnect. No lost chat context. The prod vs staging question is a single sentence away — *"compare the users table between prod and staging"* — and Claude has both profiles live in the same conversation.
 
+Once multiple profiles are loaded, the *interesting* thing the gateway can do is fan out across them. **`nucleus_call_plan`** turns one intent into N parallel tool calls and merges the results, so the comparison query above is one round-trip, not two — the structural reward for the multi-profile shape that other gateways can't ship without copying it.
+
+Beyond the wedge, it's instrumented for real use:
+
+- **Recommender that explains itself.** Every `nucleus_find_tool` hit carries a `because` array (`"matched 'sql' in tool name"`, `"sticky from last call"`) so ranking is auditable from the LLM transcript.
+- **Sticky-alias bias.** After a successful call, the gateway remembers which alias you used per connector and biases ambiguous future ranking toward it. Suppressed when you name another alias explicitly — specificity beats recency.
+- **Policy gate (`policy.toml`).** Optional `deny` and `confirm` rules per `<connector>:<alias>` glob, enforced on every dispatch path before the upstream is touched. Confirmation phrases land in the call args and the audit trail.
+- **Audit log.** JSONL at `~/.nucleusmcp/audit.log`; rotated; redacts arguments to keys + SHA-256 hash by default. Inspect with `nucleus logs --tool execute_sql --since 1h`.
+- **Idle reaper.** `--idle-timeout 15m` reclaims memory from idle subprocesses; the next call respawns transparently.
+- **`nucleus doctor`.** First-stop health check covering everything that can break a fresh install.
+
 ## Install
 
 ### Homebrew (macOS / Linux)
@@ -196,6 +207,128 @@ note    = "staging"
 profile = "work"
 ```
 
+## Tool advertisement modes (shrink the tool list)
+
+By default, every proxied tool is advertised to the MCP client at connect time. With many connectors and profiles loaded that's a lot of tool definitions in your prompt context — `4 connectors × 3 profiles × ~20 tools each ≈ 240 tool defs`. Two opt-in modes shrink that surface:
+
+| Mode | Client sees | Best for |
+|---|---|---|
+| `expose-all` (default) | every proxied tool | one or two profiles total |
+| `hybrid` | canonical alias per connector + 2 meta-tools | each service has a clear primary plus occasional secondary use |
+| `search` | only the 2 meta-tools | many profiles, every call worth a discovery hop |
+
+### Hybrid (recommended)
+
+```bash
+nucleus serve --mode hybrid
+# or pin which alias is canonical per connector:
+nucleus serve --mode hybrid --always-on supabase:atlas,github:work
+```
+
+For each connector, one alias's tools are advertised directly — Claude calls them by name as today. The other aliases live in the catalog and are reached via the meta-tools below. Without `--always-on`, the canonical alias is the first one resolved per connector (deterministic; usually the workspace-bound or first-registered profile).
+
+### Search
+
+```bash
+nucleus serve --mode search
+```
+
+The client sees only the meta-tools, regardless of how many profiles are loaded.
+
+### Meta-tools (used by both `hybrid` and `search`)
+
+- **`nucleus_find_tool(intent, connector?, limit?)`** — returns the top-ranked candidates for a natural-language intent, each with name, description, full JSON schema, and a `because` array explaining why it ranked where it did (`"matched 'sql' in tool name"`, `"matched 'atlas' in alias 'atlas'"`, `"sticky from last call"`). When the intent looks like it spans multiple profiles ("compare prod and staging", "list each", "diff …"), the response also carries a `fanout_suggestion` block with a ready-made step list to feed into `nucleus_call_plan`.
+- **`nucleus_call(name, arguments)`** — invokes a single tool by the namespaced name returned from `find_tool`.
+- **`nucleus_call_plan(steps, parallelism?)`** — fans one intent out to multiple proxied tools in parallel and returns one merged result. The shape of the gateway makes this almost free: *"compare the users table between prod and staging Supabase"* becomes one round-trip, not N. Per-step failures are returned alongside successes — partial results beat aborting the whole plan.
+
+The ranker is lexical (token-overlap with field boosts on tool name / alias / connector / description) plus a **sticky-alias bias**: after each successful dispatch, the gateway remembers the alias you actually used per connector and biases ambiguous future ranking toward it. Sticky is suppressed when the intent explicitly names another alias — being specific always wins over being recent. Future versions can accept an embeddings-based recommender — see [`docs/adr-001-tool-search-mode.md`](docs/adr-001-tool-search-mode.md).
+
+#### Fan-out example
+
+Suppose you have `supabase:atlas` (prod) and `supabase:default` (staging) both registered. Asking Claude *"compare the row count on the users table between atlas and default"* drives this sequence inside the gateway:
+
+1. `nucleus_find_tool({intent: "compare row count on users between atlas and default"})` returns the ranked tools and a `fanout_suggestion`:
+   ```json
+   {
+     "rationale": "Intent uses comparison wording and names 2 profiles (atlas, default); call nucleus_call_plan to run the same tool against all 2.",
+     "tool": "execute_sql",
+     "connector": "supabase",
+     "steps": ["supabase_atlas_execute_sql", "supabase_default_execute_sql"]
+   }
+   ```
+2. Claude calls `nucleus_call_plan` once with both steps and the shared `query` argument. Steps run concurrently (default parallelism 4, capped at 16).
+3. The merged response is one JSON document with both per-profile results, durations, and any per-step failures — Claude diffs them inline.
+
+This collapses what used to be two sequential `nucleus_call` round-trips (or two whole conversation turns in `expose-all` mode) into a single tool call.
+
+## Policy (`~/.nucleusmcp/policy.toml`)
+
+The optional policy file gates writes and destructive tools across every dispatch path — direct calls, `nucleus_call`, and every step of `nucleus_call_plan`. Without a `policy.toml`, the gateway runs in its historical "allow everything" mode, so this is purely opt-in.
+
+Two enforcement modes per rule:
+
+- **deny** — block the tool outright. The tool error names the rule and the matching pattern so you can find it in your config.
+- **confirm** — block by default, but allow when the caller's arguments include a magic confirmation phrase under the `__nucleus_confirm` key. The first call without the phrase returns a structured error telling Claude exactly what string to include — so the second call after a one-line nudge succeeds. The phrase ends up in the call arguments (and thus your audit trail), which is the point: a deliberate, attributable confirmation, not a silent pass.
+
+```toml
+# ~/.nucleusmcp/policy.toml
+
+# atlas is prod — never run schema migrations or branch deletes.
+[[rule]]
+match  = "supabase:atlas"
+deny   = ["apply_migration", "delete_branch"]
+reason = "atlas is the production project — schema changes go through CI"
+
+# Allow execute_sql, but require an explicit confirmation phrase.
+# The phrase is human-readable so audit logs make sense.
+[[rule]]
+match   = "supabase:atlas"
+confirm = ["execute_sql"]
+phrase  = "I understand atlas is PRODUCTION"
+
+# Lock down every github profile from creating issues without confirm.
+# `*` wildcards both sides of the colon.
+[[rule]]
+match   = "github:*"
+confirm = ["create_issue", "delete_*"]
+phrase  = "ack github write"
+```
+
+Match patterns are `<connector>:<alias>` with `*` wildcards on either side. Tool patterns are simple globs (`apply_*`, `*_branch`, `create_*_branch`). When multiple rules match, **deny wins over confirm** — a confirmed caller can never bypass an explicit deny.
+
+Policy file path can be overridden via the `NUCLEUSMCP_POLICY` env var (useful for CI fixtures).
+
+## Audit log (`~/.nucleusmcp/audit.log`)
+
+Every dispatch the gateway sees — direct tool calls, `nucleus_call` invocations, and each step of `nucleus_call_plan` — appends one JSON object to a JSONL audit log. Inspect it with the `nucleus logs` command:
+
+```bash
+nucleus logs                                  # last 50 entries, pretty-printed
+nucleus logs --tool execute_sql --since 1h    # filter by tool + recency
+nucleus logs --decision denied                # what did the policy block?
+nucleus logs --json | jq '.tool'              # pipe raw JSONL into jq
+```
+
+The log rotates at 10 MiB into `audit.log.1`, `audit.log.2`, … keeping the last 5 backups (~60 MiB cap). `nucleus logs` reads the active and rotated files together, so `--since 24h` works across rotation boundaries.
+
+**Privacy posture.** Tool *arguments* are PII-risky (SQL queries, repo paths, etc.), so by default the audit only logs:
+- the sorted top-level argument keys,
+- a SHA-256 hash of the argument object (so identical calls group together without exposing contents).
+
+Set `NUCLEUSMCP_AUDIT_FULL_ARGS=1` to log full argument objects instead — useful for local debugging, dangerous to leave on. Tool *results* are never logged.
+
+Each entry includes the policy decision (`allowed` / `denied` / `confirm-required` / `confirm-mismatch`), the upstream outcome (`ok` / `upstream-error` / `transport-error` / `blocked`), and whether the call came in via `direct`, `nucleus_call`, or `nucleus_call_plan`. The audit log is the answer to "did this destructive op actually run on prod, or did the policy gate catch it?"
+
+## Idle reaper
+
+By default, every profile resolved at startup runs as a long-lived child process for the gateway's lifetime — the historical behavior. With `--idle-timeout`, children that haven't been called for the given duration get reaped, and the next call respawns them transparently:
+
+```bash
+nucleus serve --idle-timeout 15m   # reap children unused for 15+ minutes
+```
+
+The cost of reaping is a 3–5 second warm-up on the next call to a reaped profile (whatever the upstream takes to spin up + complete its MCP handshake). The benefit is that a power-user setup with a dozen profiles bound across several workspaces stops paying for a dozen always-on subprocesses during long stretches of negligible activity. Default is `0` (disabled).
+
 ## Custom connectors
 
 Any HTTP MCP server works, not just the built-ins:
@@ -218,11 +351,23 @@ nucleus remove <profile-id>        # delete a profile + credentials
 nucleus use <profile-id>           # mark as default for its connector
 nucleus install [claude]           # register with Claude Code (or print config)
 nucleus serve                      # run as an MCP server over stdio (called by client)
+nucleus logs                       # tail/filter the per-call audit trail
+nucleus doctor                     # health check — first stop when something looks off
 ```
 
 Run any command with `--help` for the full flag list.
 
 ## Troubleshooting
+
+### `nucleus doctor`
+
+First stop. Runs a battery of checks (claude CLI on PATH, mcp-remote on PATH, registry reachable, ≥1 profile registered, `policy.toml` syntax, audit log dir writable, custom connectors load) and prints a one-line PASS/WARN/FAIL per check with `fix:` hints under whatever's broken. Optional `--probe http://127.0.0.1:8787/mcp` also confirms a running HTTP gateway is responsive. Exit code is 0 on PASS so it's CI-friendly.
+
+```bash
+nucleus doctor                           # quick health check
+nucleus doctor --probe http://127.0.0.1:8787/mcp
+nucleus doctor --strict                  # treat WARN as failure
+```
 
 ### Claude doesn't answer about my accounts from Nucleus
 
@@ -296,11 +441,15 @@ MCP Client (Claude, Cursor, ...)
 - [x] HTTP/OAuth connectors via `mcp-remote`
 - [x] Post-OAuth resource discovery (Supabase project picker)
 - [x] Tool description prefix for client context
-- [ ] Idle reaper / on-demand spawn (today: eager at startup)
+- [x] Search mode — meta-tools instead of eager full-list advertisement
+- [x] Hybrid mode — recommend canonical alias per connector, search the rest
+- [x] Multi-profile fan-out — single-tool-call dispatch across N profiles in parallel (`nucleus_call_plan`)
+- [x] Sticky-alias resolution + `because:` explanations on every recommendation
+- [x] Write-confirmation policy (`policy.toml` with deny / confirm / phrase rules)
+- [x] Audit log (`~/.nucleusmcp/audit.log`) + `nucleus logs` for tail/filter
+- [x] Idle reaper with transparent respawn (`--idle-timeout`)
 - [ ] Mid-session hot-swap on cwd change
-- [ ] Audit log + `nucleus logs`
 - [ ] Native OAuth (replace `mcp-remote` dependency)
-- [ ] Write-confirmation policy
 - [ ] Managed multi-tenant tier (team-shared profiles)
 
 ## Contributing
