@@ -101,11 +101,13 @@ func installClaude(printOnly bool, scope string) error {
 	}
 
 	stderrf("")
-	stderrf("✓ Registered %s with Claude.", mcpEntryName)
-	stderrf("  Restart your Claude Code session to pick up the new tools.")
+	stderrf("Registered %s with Claude.", mcpEntryName)
+	stderrf("Restart your Claude Code session to pick up the new tools.")
 	stderrf("")
-	stderrf("Next: add at least one profile, e.g.")
-	stderrf("  nucleus add supabase")
+	stderrf("Next steps:")
+	stderrf("  nucleus add <connector>      # register your first profile (try 'nucleus connectors')")
+	stderrf("  nucleus doctor               # confirm everything is wired up")
+	stderrf("  nucleus logs                 # tail the per-call audit trail (after first use)")
 	return nil
 }
 

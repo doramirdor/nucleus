@@ -48,6 +48,8 @@ func main() {
 	root.AddCommand(newUseCmd())
 	root.AddCommand(newConnectorsCmd())
 	root.AddCommand(newInstallCmd())
+	root.AddCommand(newLogsCmd())
+	root.AddCommand(newDoctorCmd())
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
